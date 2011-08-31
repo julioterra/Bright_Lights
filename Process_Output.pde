@@ -1,4 +1,5 @@
-/* CONTROL LIGHTS
+/********************* 
+  CONTROL LIGHTS
     This method is used to control lights when device is not in realtime mode.
     Based on active mode status, it either turns on the lights, turns off the lights,
     or calls the fun_mode_on method to handle the fun mode. 
@@ -12,7 +13,9 @@ void control_lights() {
     }
 }
 
-/* LIGHTS ON REALTIME
+
+/********************* 
+  LIGHTS ON REALTIME
     This method is used to control the lights when the device is in realtime 
     mode. It is called by the handle_serial method, when appropriate.
     ** Realtime mode enables a remote device to control the lights on bright 
@@ -26,20 +29,23 @@ void lights_on_realtime(byte* new_data) {
     Tlc.update();  
 }
 
-/* LIGHTS ON ALL
+
+/********************* 
+  LIGHTS ON ALL
     Turns on all lights to the current color set in the rgb_vals array.
   */
 void lights_on_all() {
     Tlc.clear();      
     for (int i = 0; i < NUM_RGB_LED; i++) {  
-        Tlc.set(redPins[i], map(rgb_vals[R], POT_output_min, POT_output_max, 0, 4096));
-        Tlc.set(greenPins[i], map(rgb_vals[G], POT_output_min, POT_output_max, 0, 4096));
-        Tlc.set(bluePins[i], map(rgb_vals[B], POT_output_min, POT_output_max, 0, 4096));
+        Tlc.set(redPins[i], rgb_vals[R]);
+        Tlc.set(greenPins[i], rgb_vals[G]);
+        Tlc.set(bluePins[i], rgb_vals[B]);
     }
     Tlc.update();  
 }
 
-/* LIGHTS ON ALL
+/********************* 
+  LIGHTS ON SINGLE ONLY
     Turns on a single light to the current color saved in the rgb_vals array and
     turns off all other lights.
   */
@@ -47,26 +53,30 @@ void lights_on_single_only(int current_led) {
     Tlc.clear();  
     for (int i = 0; i < NUM_RGB_LED; i++) {
         if (current_led == i) {
-            Tlc.set(redPins[i], map(rgb_vals[R], POT_output_min, POT_output_max, 0, 4096));
-            Tlc.set(greenPins[i], map(rgb_vals[G], POT_output_min, POT_output_max, 0, 4096));
-            Tlc.set(bluePins[i], map(rgb_vals[B], POT_output_min, POT_output_max, 0, 4096));
+            Tlc.set(redPins[i], rgb_vals[R]);
+            Tlc.set(greenPins[i], rgb_vals[G]);
+            Tlc.set(bluePins[i], rgb_vals[B]);
         }
     }      
     Tlc.update();  
 }
 
-/* LIGHTS ON SINGLE
+
+/********************* 
+  LIGHTS ON SINGLE
     Turns on a single light to current color saved in the rgb_vals array, while 
     leaving all other lights unchanged.
   */
 void lights_on_single(int current_led) {
-    Tlc.set(redPins[current_led], map(rgb_vals[R], POT_output_min, POT_output_max, 0, 4096));
-    Tlc.set(greenPins[current_led], map(rgb_vals[G], POT_output_min, POT_output_max, 0, 4096));
-    Tlc.set(bluePins[current_led], map(rgb_vals[B], POT_output_min, POT_output_max, 0, 4096));
+    Tlc.set(redPins[current_led], rgb_vals[R]);
+    Tlc.set(greenPins[current_led], rgb_vals[G]);
+    Tlc.set(bluePins[current_led], rgb_vals[B]);
     Tlc.update();  
 }
 
-/* LIGHTS OFF ALL
+
+/********************* 
+  LIGHTS OFF ALL
     Turns all lights.
   */
 void lights_off_all() {
@@ -74,7 +84,9 @@ void lights_off_all() {
       Tlc.update(); 
 }
 
-/* LIGHTS OFF SINGLE
+
+/********************* 
+  LIGHTS OFF SINGLE
     Turns off a single lights only.
   */
 void lights_off_single(int current_led) {
@@ -84,7 +96,24 @@ void lights_off_single(int current_led) {
     Tlc.update();  
 }
 
-/* STROBE ACTIVE
+
+/********************* 
+  BLINK DELAY
+    Blinks the lights while delaying the reading of input. 
+    Method is used to identify which color parameter is being controlled, 
+    when the parameter is changed.
+  */
+void blink_delay(int blinks) {
+   for (int i = 0; i < blinks; i++) {
+     lights_on_all();
+     delay(500);
+     lights_off_all();
+     delay(200);
+   }   
+}
+
+/********************* 
+  STROBE ACTIVE
     Controls the lights when in strobe mode.
   */
 void strobe_active() {
@@ -98,7 +127,9 @@ void strobe_active() {
     else { lights_off_all(); }
 }
 
-/* SCROLL ACTIVE
+
+/********************* 
+  SCROLL ACTIVE
     Controls the lights when in scroll mode.
   */
 void scroll_active() {
@@ -111,16 +142,3 @@ void scroll_active() {
     lights_on_single_only(scroll_led_active);
 }
 
-/* BLINK DELAY
-    Blinks the lights while delaying the reading of input. 
-    Method is used to identify which color parameter is being controlled, 
-    when the parameter is changed.
-  */
-void blink_delay(int blinks) {
-   for (int i = 0; i < blinks; i++) {
-     lights_on_all();
-     delay(500);
-     lights_off_all();
-     delay(200);
-   }   
-}
