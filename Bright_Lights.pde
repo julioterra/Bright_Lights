@@ -7,6 +7,7 @@
 #include <Tlc5940.h>
 #include <tlc_config.h>
 #include <HSBColor.h>
+#include <Int2Byte.h>
 #include <EEPROM.h>
 #include <NewSoftSerial.h>
 
@@ -31,6 +32,10 @@
 #define FUN_strobe          0     
 #define FUN_scroll          1   
 
+// CONSTANTS: hold the number for each of the color modes
+#define RGB                 0     
+#define HSB                 1   
+
 // CONSTANTS: pot output range values for potentiometer
 #define POT_output_max      255
 #define POT_output_min      0
@@ -42,7 +47,8 @@
 #define B    2
 
 // CONSTANTS: saving the EEPROM location where the R, G, B color values are stored 
-int const EEPROM_color_address[NUM_color_ctrls] = {0,1,2};    // assigns address for saving rgb color values
+int const EEPROM_rgb_address[NUM_color_ctrls] = {0,1,2};    // assigns address for saving rgb color values
+int const EEPROM_hsb_address[NUM_color_ctrls] = {3,5,7};    // assigns address for saving rgb color values
 
 // CONSTANTS: arrays that hold the pin numbers of each led on the TLC5940 LED drivers
 //            on the rgb_pins array the r, g, b pin for each led are grouped together 
@@ -57,7 +63,7 @@ bool new_mode = false;             // holds whether the mode has changed (either
                                    // variable used to drive the soft takeover on the potentiometer
 
 // VARIABLES: color control state variable; active rgb or hsb parameter variables; and hsb and rgb value arrays 
-int color_control = 1;             // holds whether the light is controlled by RGB (0) or HSB (1) mode
+int color_mode = HSB;           // holds whether the light is controlled by RGB (0) or HSB (1) mode
 int active_rgb = B;                // holds rgb parameter currently controlled by the potentiometer
 int active_hsb = 2;                // holds hsb parameter currently controlled by the potentiometer
 int hsb_vals[NUM_color_ctrls] = {0,0,0};    // holds the hsb values 
@@ -84,7 +90,8 @@ AnalogSwitch pot = AnalogSwitch(ID_potentiometer, A2);
 NewSoftSerial blueSerial = NewSoftSerial(2, 4);
 
 
-/* SETUP method
+/********************* 
+  SETUP method
      This method initializes both serial ports, the led drivers (TLC5940), and 
      the potentiometer object; and it loads the saved color
   */
@@ -104,11 +111,11 @@ void setup() {
 
   // load colors from EEPROM 
   load_colors();
-  //  for (int i; i < NUM_color_ctrls; i++) rgb_vals[i] = EEPROM.read(EEPROM_color_address[i]);
 }
 
 
-/* LOOP method
+/********************* 
+  LOOP method
      This method is responsible for handling serial input from bluetooth and USB connections;
      and physical input from the double-pole switch and potentiometer; it also controls the
      lights (via the handle_serial method when in realtime mode, and via the control_lights method
