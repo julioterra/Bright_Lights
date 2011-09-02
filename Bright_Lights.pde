@@ -17,8 +17,6 @@
 #define NUM_color_ctrls     3
 #define NUM_fun_modes       2
 
-#define LED_max_level       4000
-
 // CONSTANTS: ids for each switch and potentiometer
 #define ID_strobe_switch    0 
 #define ID_color_switch     1
@@ -38,10 +36,11 @@
 #define RGB                 0     
 #define HSB                 1   
 
-// CONSTANTS: pot output range values for potentiometer
+// CONSTANTS: pot output range values, and led output max value
 #define POT_output_max      255
 #define POT_output_min      0
 #define POT_output_range    POT_output_max - POT_output_min
+#define LED_max_level       4000
 
 // CONSTANTS: assigning the letter R, G, and B the value of their array location
 #define R    0  
@@ -60,29 +59,35 @@ int const bluePins[NUM_RGB_LED] = {1, 4, 7, 10, 13, 24, 27, 30};
 int const rgb_pins[NUM_RGB_LED*NUM_color_ctrls] = {3,2,1, 6,5,4, 9,8,7, 12,11,10, 15,14,13, 26,25,24, 29,28,27, 0,31,30};
 
 // VARIABLES: overall mode variables
-int active_mode = MODE_off;        // holds the current mode state
-bool new_mode = false;             // holds whether the mode has changed (either active or fun)
-                                   // variable used to drive the soft takeover on the potentiometer
+    int active_mode = MODE_off;        // holds the current mode state
+    bool new_mode = false;             // holds whether the mode has changed (either active or fun)
+                                       // variable used to drive the soft takeover on the potentiometer
 
 // VARIABLES: color control state variable; active rgb or hsb parameter variables; and hsb and rgb value arrays 
-int color_mode = HSB;           // holds whether the light is controlled by RGB (0) or HSB (1) mode
-int active_rgb = B;                // holds rgb parameter currently controlled by the potentiometer
-int active_hsb = 2;                // holds hsb parameter currently controlled by the potentiometer
-int hsb_vals[NUM_color_ctrls] = {0,0,0};    // holds the hsb values 
-int rgb_vals[NUM_color_ctrls] = {0,0,0};    // holds the rgb values
+    int color_mode = HSB;              // holds whether the light is controlled by RGB (0) or HSB (1) mode
+    int active_rgb = B;                // holds rgb parameter currently controlled by the potentiometer
+    int active_hsb = 2;                // holds hsb parameter currently controlled by the potentiometer
+    int hsb_vals[NUM_color_ctrls] = {0,0,0};    // holds the hsb values 
+    int rgb_vals[NUM_color_ctrls] = {0,0,0};    // holds the rgb values
 
-// VARIABLES: fund mode control state variable; strobe and scroll variables 
-int fun_mode_control = 0;          // holds the current fun mode (strobe or scroll)
+    long last_color_change = 0;         // holds last time color was changed
+    int color_save_interval = 1000;
+    boolean color_saved = false;       // holds if current color has been saved
 
-// strobe control variables
-long strobe_interval = 18;
-long strobe_last_switch = 0;
-bool strobe_on = false;
 
-// scroll control variables
-long scroll_interval = 50;
-long scroll_last_switch = 0;
-int scroll_led_active = 0;
+// VARIABLES: fun mode control state variable; strobe and scroll variables 
+    int fun_mode_active = 0;          // holds the current fun mode (strobe or scroll)
+  
+    // strobe control variables
+    long strobe_interval = 18;
+    long strobe_last_switch = 0;
+    bool strobe_on = false;
+    
+    // scroll control variables
+    long scroll_interval = 50;
+    long scroll_last_switch = 0;
+    int scroll_led_active = 0;
+
 
 // OBJECTS: switch and analog switch objects corresponding to physical switches and potentiometers
 Switch switches[NUM_switches] = {Switch(ID_strobe_switch, A0), Switch(ID_color_switch, A1)};
@@ -129,6 +134,7 @@ void loop() {
     if (active_mode != MODE_realtime) { 
         control_lights(); 
     }
+    save_colors();
 }
 
 

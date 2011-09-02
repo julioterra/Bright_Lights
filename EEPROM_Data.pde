@@ -5,19 +5,20 @@
   */
 void save_colors(){
   // fix code so that it only saves when color has not changed for a while
-  
-  byte hsb_hue[] = {0,0};
-  byte hsb_sat[] = {0,0};
-  byte hsb_bright[] = {0,0};
-  
-  int2bytes(hsb_vals[0], hsb_hue);
-  int2bytes(hsb_vals[1], hsb_sat);
-  int2bytes(hsb_vals[2], hsb_bright);
-  
-  for (int i; i < 2; i++) {
-      EEPROM.write(EEPROM_hsb_address[0]+i, hsb_hue[i]);
-      EEPROM.write(EEPROM_hsb_address[1]+i, hsb_sat[i]);
-      EEPROM.write(EEPROM_hsb_address[2]+i, hsb_bright[i]);
+  if (!color_saved && (millis() - last_color_change) > color_save_interval) {  
+      byte hsb_hue[] = {0,0};
+      byte hsb_sat[] = {0,0};
+      byte hsb_bright[] = {0,0};
+      
+      int2bytes(hsb_vals[0], hsb_hue);
+      int2bytes(hsb_vals[1], hsb_sat);
+      int2bytes(hsb_vals[2], hsb_bright);
+      
+      for (int i; i < 2; i++) {
+          EEPROM.write(EEPROM_hsb_address[0]+i, hsb_hue[i]);
+          EEPROM.write(EEPROM_hsb_address[1]+i, hsb_sat[i]);
+          EEPROM.write(EEPROM_hsb_address[2]+i, hsb_bright[i]);
+      }
   }
 }
 

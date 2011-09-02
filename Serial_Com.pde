@@ -41,8 +41,6 @@ void handle_serial() {
                     byte_count++;
                     if (byte_count == MSG_LEN_realtime) {
                         parse_serial_msg(msg_type, serial_msg);
-//                        parse_mode_from_header(msg_type);
-//                        lights_on_realtime(serial_msg);
                         byte_count = 0;
                         reading_msg_flag = false;
                     }
@@ -53,7 +51,17 @@ void handle_serial() {
                     serial_msg[byte_count] = new_byte;  
                     byte_count++;
                     if (byte_count == MSG_LEN_color) {
-//                        parse_mode_from_header(msg_type);
+                        parse_serial_msg(msg_type, serial_msg);
+                        byte_count = 0;
+                        reading_msg_flag = false;
+                    }
+                }                
+
+                // if msg type equals any of the other msg types then route them appropriately
+                else if (msg_type == MODE_MSG_strobe) {
+                    serial_msg[byte_count] = new_byte;  
+                    byte_count++;
+                    if (byte_count == MSG_LEN_strobe) {
                         parse_serial_msg(msg_type, serial_msg);
                         byte_count = 0;
                         reading_msg_flag = false;
@@ -89,15 +97,15 @@ void parse_serial_msg(byte msg_header, byte* msg_body) {
 //            process_hsb_msg(msg_body, 0, 127);
             break;
         case MODE_MSG_scroll:
-            if (active_mode != MODE_fun || fun_mode_control != FUN_scroll) new_mode = true;
+            if (active_mode != MODE_fun || fun_mode_active != FUN_scroll) new_mode = true;
             active_mode = MODE_fun;
-            fun_mode_control = FUN_scroll;
+            fun_mode_active = FUN_scroll;
             set_scroll(int(msg_body[0]), 0, 127);
             break;
         case MODE_MSG_strobe:
-            if (active_mode != MODE_fun || fun_mode_control != FUN_strobe) new_mode = true;
+            if (active_mode != MODE_fun || fun_mode_active != FUN_strobe) new_mode = true;
             active_mode = MODE_fun;
-            fun_mode_control = FUN_strobe;
+            fun_mode_active = FUN_strobe;
             set_strobe(int(msg_body[0]), 0, 127);
             break;
         default:
