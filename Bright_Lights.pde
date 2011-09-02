@@ -17,6 +17,8 @@
 #define NUM_color_ctrls     3
 #define NUM_fun_modes       2
 
+#define LED_max_level       4000
+
 // CONSTANTS: ids for each switch and potentiometer
 #define ID_strobe_switch    0 
 #define ID_color_switch     1

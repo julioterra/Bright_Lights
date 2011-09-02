@@ -72,23 +72,27 @@ void parse_serial_msg(byte msg_header, byte* msg_body) {
             break;
         case SET_MSG_rgb:
             color_mode = RGB;
-            process_rgb_msg(msg_body, 0, 127);
+            for (int i = 0; i < 3; i++) set_rgb_color(i, int(msg_body[i]), 0, 127);
+//            process_rgb_msg(msg_body, 0, 127);
             break;
         case SET_MSG_hsb:
             color_mode = HSB;
-            process_hsb_msg(msg_body, 0, 127);
+            for (int i = 0; i < 3; i++) {
+                set_hsb_color(i, int(msg_body[i]), 0, 127);
+            }
             break;
         case MODE_MSG_color_hsb:
             if (active_mode != MODE_color) new_mode = true;
             active_mode = MODE_color;
             color_mode = HSB;
-            process_hsb_msg(msg_body, 0, 127);
+            for (int i = 0; i < 3; i++) set_hsb_color(i, int(msg_body[i]), 0, 127);
+//            process_hsb_msg(msg_body, 0, 127);
             break;
-
         case MODE_MSG_scroll:
             if (active_mode != MODE_fun || fun_mode_control != FUN_scroll) new_mode = true;
             active_mode = MODE_fun;
             fun_mode_control = FUN_scroll;
+            set_scroll(int(msg_body[0]), 0, 127);
             break;
         case MODE_MSG_strobe:
             if (active_mode != MODE_fun || fun_mode_control != FUN_strobe) new_mode = true;
@@ -102,15 +106,17 @@ void parse_serial_msg(byte msg_header, byte* msg_body) {
 }
 
 void process_rgb_msg(byte* new_msg, int min_val, int max_val) {
-  rgb_vals[0] = map(int(new_msg[0]), min_val, max_val, 0, 4096);
-  rgb_vals[1] = map(int(new_msg[1]), min_val, max_val, 0, 4096);
-  rgb_vals[2] = map(int(new_msg[2]), min_val, max_val, 0, 4096);
+  for (int i = 0; i < 3; i++) set_rgb_color(0, int(new_msg[0]), min_val, max_val);
+//  rgb_vals[0] = map(int(new_msg[0]), min_val, max_val, 0, LED_max_level);
+//  rgb_vals[1] = map(int(new_msg[1]), min_val, max_val, 0, LED_max_level);
+//  rgb_vals[2] = map(int(new_msg[2]), min_val, max_val, 0, LED_max_level);
 }
 
 void process_hsb_msg(byte* new_msg, int min_val, int max_val) {
-  hsb_vals[0] = map(int(new_msg[0]), min_val, max_val, 0, 255);
-  hsb_vals[1] = map(int(new_msg[1]), min_val, max_val, 0, 255);
-  hsb_vals[2] = map(int(new_msg[2]), min_val, max_val, 0, 255);
+  for (int i = 0; i < 3; i++) set_hsb_color(0, int(new_msg[0]), min_val, max_val);
+//  hsb_vals[0] = map(int(new_msg[0]), min_val, max_val, 0, 255);
+//  hsb_vals[1] = map(int(new_msg[1]), min_val, max_val, 0, 255);
+//  hsb_vals[2] = map(int(new_msg[2]), min_val, max_val, 0, 255);
   convertHSB();
 }
 

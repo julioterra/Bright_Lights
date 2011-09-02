@@ -4,6 +4,8 @@
     feature the saved color on startup.
   */
 void save_colors(){
+  // fix code so that it only saves when color has not changed for a while
+  
   byte hsb_hue[] = {0,0};
   byte hsb_sat[] = {0,0};
   byte hsb_bright[] = {0,0};
