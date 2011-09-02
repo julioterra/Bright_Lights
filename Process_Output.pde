@@ -24,7 +24,7 @@ void control_lights() {
 void lights_on_realtime(byte* new_data) {
     Tlc.clear();      
     for (int i = 0; i < 24; i++) {  
-        Tlc.set(rgb_pins[i], map(int(new_data[i]), 0, 127, 0, 4096));
+        Tlc.set(rgb_pins[i], map(int(new_data[i]), 0, 127, 0, LED_max_level));
     }
     Tlc.update();  
 }
@@ -106,10 +106,10 @@ void lights_off_single(int current_led) {
 void blink_delay(int blinks) {
    for (int i = 0; i < blinks; i++) {
      lights_on_all();
-     delay(500);
+     delay(400);
      lights_off_all();
-     delay(200);
-   }   
+     delay(300);
+   }  
 }
 
 /********************* 
