@@ -8,8 +8,8 @@ void control_lights() {
     if (active_mode == MODE_color) lights_on_all();
     else if (active_mode == MODE_off) lights_off_all(); 
     else if (active_mode == MODE_fun) {
-        if (fun_mode_control == FUN_strobe) strobe_active(); 
-        else if (fun_mode_control == FUN_scroll) scroll_active(); 
+        if (fun_mode_active == FUN_strobe) strobe_active(); 
+        else if (fun_mode_active == FUN_scroll) scroll_active(); 
     }
 }
 

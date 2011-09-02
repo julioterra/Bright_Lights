@@ -13,10 +13,10 @@ void  handle_physical_input() {
             int cur_state = switches[i].get_state();
             if (i == ID_strobe_switch && cur_state == HIGH) {
                 active_mode = MODE_fun;
-                select_fun_mode();
+                select_fun_mode_for_physical_ctrl();
             } else if (i == ID_color_switch && cur_state == HIGH) {
                 active_mode = MODE_color;
-                select_color();
+                select_color_param_for_physical_ctrl();
             } else if (switches[i].get_state() == LOW) {
                 active_mode = MODE_off;
             }   
@@ -26,12 +26,50 @@ void  handle_physical_input() {
     // check pot state and route value to appropriate function
     if (pot.available()) {
         if (active_mode == MODE_fun) {
-            set_fun_mode(pot.get_state(), POT_output_min, POT_output_max);
+//            set_fun_mode_from_physical_ctrl(pot.get_state(), POT_output_min, POT_output_max);
+            if (fun_mode_active == FUN_strobe) { set_strobe(pot.get_state(), POT_output_min, POT_output_max); }
+            else if (fun_mode_active == FUN_scroll) { set_scroll(pot.get_state(), POT_output_min, POT_output_max);}
+
         }
         else if (active_mode == MODE_color) {
-            set_color(pot.get_state(), POT_output_min, POT_output_max);
+//            set_color_from_physical_ctrl(pot.get_state(), POT_output_min, POT_output_max);
+            if (color_mode == HSB) { soft_set_hsb_color(active_hsb, pot.get_state(), POT_output_min, POT_output_max); }
+            else if (color_mode == RGB) { soft_set_rgb_color(active_hsb, pot.get_state(), POT_output_min, POT_output_max); }
+
         }
     }
+}
+
+
+/********************* 
+  SELECT COLOR PARAM FOR PHYSICAL CONTROL
+     This method is called whenever the switch is toggled to the color select side.
+     The state of the color_control variable determines whether we are alternating
+     between controls for different RGB, or HSB values. 
+   */
+void select_color_param_for_physical_ctrl() {
+    if (color_mode == RGB) {
+        active_rgb++;
+        if (active_rgb >= NUM_color_ctrls) active_rgb = 0;
+        blink_delay(active_rgb+1);
+    }
+    
+    else if (color_mode == HSB) {
+        active_hsb++;
+        if (active_hsb >= NUM_color_ctrls) active_hsb = 0;  
+        blink_delay(active_hsb+1);
+    }
+}
+
+
+/********************* 
+  SELECT FUN MODE FOR PHYSICAL CONTROL
+     This method is called whenever the switch is toggled to the fun mode select side.
+     When method is called it toggles between the strobe and scroll mode.
+   */
+void select_fun_mode_for_physical_ctrl() {
+    fun_mode_active++;
+    if (fun_mode_active >= NUM_fun_modes) fun_mode_active = 0;
 }
 
 
@@ -62,3 +100,29 @@ boolean check_soft_takeover(int old_val, int new_val) {
     
     return false;
 }
+
+
+
+
+
+/********************* 
+  SET FUN MODE
+    Sets the strobe or scroll speed depending on the state of the active_fun_mode variable.
+  */
+//void set_fun_mode_from_physical_ctrl(int new_val, int min_val, int max_val) {
+//    if (fun_mode_active == FUN_strobe) { set_strobe(new_val, min_val, max_val); }
+//    else if (fun_mode_active == FUN_scroll) { set_scroll(new_val, min_val, max_val);}
+//}
+/********************* 
+  SET COLOR FROM PHYSICAL CONTROLS
+    This method is used to set the active R, G, B variable, or H, S, B variable. 
+    the color_control variable determines whether the color is being controlled
+    in rgb or hsb mode. Then the color_active, and active_hsb variables define
+    which specific parameter from either of these modes is currently controlled
+    by the potentiometer.
+  */
+//void set_color_from_physical_ctrl(int new_val, int min_val, int max_val) {
+//    if (color_mode == HSB) { soft_set_hsb_color(active_hsb, new_val, min_val, max_val); }
+//    else if (color_mode == RGB) { soft_set_rgb_color(active_hsb, new_val, min_val, max_val); }
+//}
+
