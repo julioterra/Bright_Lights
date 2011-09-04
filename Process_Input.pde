@@ -26,8 +26,8 @@ void  handle_physical_input() {
     // check pot state and route value to appropriate function
     if (pot.available()) {
         if (active_mode == MODE_fun) {
-            if (fun_mode_active == FUN_strobe) { soft_set_strobe(pot.get_state(), POT_output_min, POT_output_max); }
-            else if (fun_mode_active == FUN_scroll) { soft_set_scroll(pot.get_state(), POT_output_min, POT_output_max);}
+            if (fun_mode_active == FUN_strobe) { soft_set_strobe_speed(pot.get_state(), POT_output_min, POT_output_max); }
+            else if (fun_mode_active == FUN_scroll) { soft_set_scroll_speed(pot.get_state(), POT_output_min, POT_output_max);}
 
         }
         else if (active_mode == MODE_color) {
