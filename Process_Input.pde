@@ -26,13 +26,11 @@ void  handle_physical_input() {
     // check pot state and route value to appropriate function
     if (pot.available()) {
         if (active_mode == MODE_fun) {
-//            set_fun_mode_from_physical_ctrl(pot.get_state(), POT_output_min, POT_output_max);
-            if (fun_mode_active == FUN_strobe) { set_strobe(pot.get_state(), POT_output_min, POT_output_max); }
-            else if (fun_mode_active == FUN_scroll) { set_scroll(pot.get_state(), POT_output_min, POT_output_max);}
+            if (fun_mode_active == FUN_strobe) { soft_set_strobe(pot.get_state(), POT_output_min, POT_output_max); }
+            else if (fun_mode_active == FUN_scroll) { soft_set_scroll(pot.get_state(), POT_output_min, POT_output_max);}
 
         }
         else if (active_mode == MODE_color) {
-//            set_color_from_physical_ctrl(pot.get_state(), POT_output_min, POT_output_max);
             if (color_mode == HSB) { soft_set_hsb_color(active_hsb, pot.get_state(), POT_output_min, POT_output_max); }
             else if (color_mode == RGB) { soft_set_rgb_color(active_hsb, pot.get_state(), POT_output_min, POT_output_max); }
 
@@ -84,45 +82,19 @@ boolean check_soft_takeover(int old_val, int new_val) {
 
    if (new_mode) {
         soft_takeover_complete = false;
-        new_mode = false;
+//        new_mode = false;
         if (new_val > old_val) takeover_direction = 1;
         else if (new_val < old_val) takeover_direction = -1;
         else soft_takeover_complete = true;
-        return false;    
+//        return false;    
     }
     
     if (!soft_takeover_complete) {
-        if (takeover_direction > 0 && (new_val < old_val + 20)) soft_takeover_complete = true;
-        else if (takeover_direction < 0 && new_val > old_val - 20) soft_takeover_complete = true;
+        if (takeover_direction == 1 && (new_val < old_val + 5)) soft_takeover_complete = true;
+        else if (takeover_direction == -1 && (new_val > old_val - 5)) soft_takeover_complete = true;
     }
     
     if (soft_takeover_complete) return true;
     
     return false;
 }
-
-
-
-
-
-/********************* 
-  SET FUN MODE
-    Sets the strobe or scroll speed depending on the state of the active_fun_mode variable.
-  */
-//void set_fun_mode_from_physical_ctrl(int new_val, int min_val, int max_val) {
-//    if (fun_mode_active == FUN_strobe) { set_strobe(new_val, min_val, max_val); }
-//    else if (fun_mode_active == FUN_scroll) { set_scroll(new_val, min_val, max_val);}
-//}
-/********************* 
-  SET COLOR FROM PHYSICAL CONTROLS
-    This method is used to set the active R, G, B variable, or H, S, B variable. 
-    the color_control variable determines whether the color is being controlled
-    in rgb or hsb mode. Then the color_active, and active_hsb variables define
-    which specific parameter from either of these modes is currently controlled
-    by the potentiometer.
-  */
-//void set_color_from_physical_ctrl(int new_val, int min_val, int max_val) {
-//    if (color_mode == HSB) { soft_set_hsb_color(active_hsb, new_val, min_val, max_val); }
-//    else if (color_mode == RGB) { soft_set_rgb_color(active_hsb, new_val, min_val, max_val); }
-//}
-

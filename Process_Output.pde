@@ -44,6 +44,7 @@ void lights_on_all() {
     Tlc.update();  
 }
 
+
 /********************* 
   LIGHTS ON SINGLE ONLY
     Turns on a single light to the current color saved in the rgb_vals array and
@@ -57,6 +58,22 @@ void lights_on_single_only(int current_led) {
             Tlc.set(greenPins[i], rgb_vals[G]);
             Tlc.set(bluePins[i], rgb_vals[B]);
         }
+    }      
+    Tlc.update();  
+}
+
+
+/********************* 
+  LIGHTS ON MULTIPLE
+    Turns on all the lights on the led array
+  */
+void lights_on_multiple(int* led_array, int array_length) {
+    
+    Tlc.clear();  
+    for (int j = 0; j < array_length; j++) {
+        Tlc.set(redPins[led_array[j]], rgb_vals[R]);
+        Tlc.set(greenPins[led_array[j]], rgb_vals[G]);
+        Tlc.set(bluePins[led_array[j]], rgb_vals[B]);
     }      
     Tlc.update();  
 }
@@ -112,33 +129,4 @@ void blink_delay(int blinks) {
    }  
 }
 
-/********************* 
-  STROBE ACTIVE
-    Controls the lights when in strobe mode.
-  */
-void strobe_active() {
-    long current_time = millis();
-    if (current_time - strobe_last_switch > strobe_interval) {
-        if (strobe_on) { strobe_on = false; } 
-        else { strobe_on = true; }
-        strobe_last_switch = current_time;
-    }
-    if (strobe_on) { lights_on_all(); } 
-    else { lights_off_all(); }
-}
-
-
-/********************* 
-  SCROLL ACTIVE
-    Controls the lights when in scroll mode.
-  */
-void scroll_active() {
-    long current_time = millis();
-    if (current_time - scroll_last_switch > scroll_interval) {
-        scroll_led_active++;
-        if (scroll_led_active >= NUM_RGB_LED) scroll_led_active = 0;
-        scroll_last_switch = current_time;
-    }    
-    lights_on_single_only(scroll_led_active);
-}
 
