@@ -16,6 +16,8 @@
 #define NUM_RGB_LED         8
 #define NUM_color_ctrls     3
 #define NUM_fun_modes       2
+#define NUM_scroll_ctrls    3
+#define NUM_strobe_ctrls    1
 
 // CONSTANTS: ids for each switch and potentiometer
 #define ID_strobe_switch    0 
@@ -42,21 +44,30 @@
 #define POT_output_range    POT_output_max - POT_output_min
 #define LED_max_level       4000
 
+// CONSTANTS: scroll and strobe min and max range values
+#define SCROLL_inter_min    5
+#define SCROLL_inter_max    300
+#define SCROLL_width_min    1
+#define SCROLL_width_max    7
+#define STROBE_inter_min    5
+#define STROBE_inter_max    80
+
 // CONSTANTS: assigning the letter R, G, and B the value of their array location
 #define R    0  
 #define G    1
 #define B    2
 
 // CONSTANTS: saving the EEPROM location where the R, G, B color values are stored 
-int const EEPROM_rgb_address[NUM_color_ctrls] = {0,1,2};    // assigns address for saving rgb color values
-int const EEPROM_hsb_address[NUM_color_ctrls] = {3,5,7};    // assigns address for saving rgb color values
+int const EEPROM_hsb_address[NUM_color_ctrls] = {3,5,7};          // assigns address for saving rgb color values
+int const EEPROM_scroll_address[NUM_scroll_ctrls] = {9,11,13};    // assigns address for saving speed, direction, width
+int const EEPROM_strobe_address[NUM_strobe_ctrls] = {15};    // assigns address for saving speed, direction, width
 
 // CONSTANTS: arrays that hold the pin numbers of each led on the TLC5940 LED drivers
 //            on the rgb_pins array the r, g, b pin for each led are grouped together 
-int const redPins[NUM_RGB_LED] = {3, 6, 9, 12, 15, 26, 29, 0};
-int const greenPins[NUM_RGB_LED] = {2, 5, 8, 11, 14, 25, 28, 31};
-int const bluePins[NUM_RGB_LED] = {1, 4, 7, 10, 13, 24, 27, 30};
-int const rgb_pins[NUM_RGB_LED*NUM_color_ctrls] = {3,2,1, 6,5,4, 9,8,7, 12,11,10, 15,14,13, 26,25,24, 29,28,27, 0,31,30};
+int const redPins[NUM_RGB_LED] = {26, 29, 0, 3, 6, 9, 12, 15};
+int const greenPins[NUM_RGB_LED] = {25, 28, 31, 2, 5, 8, 11, 14};
+int const bluePins[NUM_RGB_LED] = {24, 27, 30, 1, 4, 7, 10, 13};
+int const rgb_pins[NUM_RGB_LED*NUM_color_ctrls] = {26,25,24, 29,28,27, 0,31,30, 3,2,1, 6,5,4, 9,8,7, 12,11,10, 15,14,13};
 
 // VARIABLES: overall mode variables
     int active_mode = MODE_off;        // holds the current mode state
@@ -71,22 +82,28 @@ int const rgb_pins[NUM_RGB_LED*NUM_color_ctrls] = {3,2,1, 6,5,4, 9,8,7, 12,11,10
     int rgb_vals[NUM_color_ctrls] = {0,0,0};    // holds the rgb values
 
     long last_color_change = 0;         // holds last time color was changed
-    int color_save_interval = 1000;
     boolean color_saved = false;       // holds if current color has been saved
+    int save_interval = 1000;
 
 
 // VARIABLES: fun mode control state variable; strobe and scroll variables 
     int fun_mode_active = 0;          // holds the current fun mode (strobe or scroll)
   
+    long last_fun_mode_change = 0;         // holds last time color was changed
+    boolean fun_mode_saved = false;       // holds if current color has been saved
+  
     // strobe control variables
-    long strobe_interval = 18;
+    int strobe_speed = STROBE_inter_max;
     long strobe_last_switch = 0;
     bool strobe_on = false;
     
     // scroll control variables
-    long scroll_interval = 50;
+    int scroll_speed = SCROLL_inter_max;
     long scroll_last_switch = 0;
-    int scroll_led_active = 0;
+    int scroll_led_pos = 0;
+    int scroll_direction = 3;
+    int scroll_width = 3;
+//    int scroll_width = SCROLL_width_min;
 
 
 // OBJECTS: switch and analog switch objects corresponding to physical switches and potentiometers
@@ -118,6 +135,7 @@ void setup() {
 
   // load colors from EEPROM 
   load_colors();
+  load_fun_mode();
 }
 
 
@@ -135,6 +153,7 @@ void loop() {
         control_lights(); 
     }
     save_colors();
+    save_fun_mode();
 }
 
 

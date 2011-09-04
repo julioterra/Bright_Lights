@@ -9,14 +9,18 @@
 #define SET_MSG_rgb          128
 #define SET_MSG_hsb          129
 #define MODE_MSG_color_hsb   192
-#define MODE_MSG_scroll      193
 #define MODE_MSG_strobe      194
+#define MODE_MSG_scroll      193
 
 byte msg_type;
 byte serial_msg[MSG_LEN_realtime];
 int byte_count = 0;
 bool reading_msg_flag = false;
 
+
+// CONSIDER USING END BYTE TO SIMPLIFY THIS METHOD. 
+// then I can just read until the end byte is received, and then send the message to the parse
+// message method to sort out what actions to take in response.
 void handle_serial() {
     if (Serial.available()){
         while(Serial.available()) {          
@@ -67,6 +71,17 @@ void handle_serial() {
                         reading_msg_flag = false;
                     }
                 }                
+
+                // if msg type equals any of the other msg types then route them appropriately
+                else if (msg_type == MODE_MSG_scroll) {
+                    serial_msg[byte_count] = new_byte;  
+                    byte_count++;
+                    if (byte_count == MSG_LEN_scroll) {
+                        parse_serial_msg(msg_type, serial_msg);
+                        byte_count = 0;
+                        reading_msg_flag = false;
+                    }
+                }                
             }
         } 
     }
@@ -79,13 +94,13 @@ void parse_serial_msg(byte msg_header, byte* msg_body) {
             lights_on_realtime(msg_body);
             break;
         case SET_MSG_rgb:
-            color_mode = RGB;
-            for (int i = 0; i < 3; i++) set_rgb_color(i, int(msg_body[i]), 0, 127);
+//            color_mode = RGB;
+//            for (int i = 0; i < 3; i++) set_rgb_color(i, int(msg_body[i]), 0, 127);
 //            process_rgb_msg(msg_body, 0, 127);
-            break;
+//            break;
         case SET_MSG_hsb:
             color_mode = HSB;
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 3; i++){
                 set_hsb_color(i, int(msg_body[i]), 0, 127);
             }
             break;
@@ -93,14 +108,17 @@ void parse_serial_msg(byte msg_header, byte* msg_body) {
             if (active_mode != MODE_color) new_mode = true;
             active_mode = MODE_color;
             color_mode = HSB;
-            for (int i = 0; i < 3; i++) set_hsb_color(i, int(msg_body[i]), 0, 127);
-//            process_hsb_msg(msg_body, 0, 127);
+            for (int i = 0; i < 3; i++){
+                set_hsb_color(i, int(msg_body[i]), 0, 127);
+            }
             break;
         case MODE_MSG_scroll:
             if (active_mode != MODE_fun || fun_mode_active != FUN_scroll) new_mode = true;
             active_mode = MODE_fun;
             fun_mode_active = FUN_scroll;
             set_scroll(int(msg_body[0]), 0, 127);
+            set_scroll_direction(int(msg_body[1]), 0, 4);
+            set_scroll_width(int(msg_body[1]), 0, 127);
             break;
         case MODE_MSG_strobe:
             if (active_mode != MODE_fun || fun_mode_active != FUN_strobe) new_mode = true;
@@ -111,21 +129,6 @@ void parse_serial_msg(byte msg_header, byte* msg_body) {
         default:
             break;    
     }  
-}
-
-void process_rgb_msg(byte* new_msg, int min_val, int max_val) {
-  for (int i = 0; i < 3; i++) set_rgb_color(0, int(new_msg[0]), min_val, max_val);
-//  rgb_vals[0] = map(int(new_msg[0]), min_val, max_val, 0, LED_max_level);
-//  rgb_vals[1] = map(int(new_msg[1]), min_val, max_val, 0, LED_max_level);
-//  rgb_vals[2] = map(int(new_msg[2]), min_val, max_val, 0, LED_max_level);
-}
-
-void process_hsb_msg(byte* new_msg, int min_val, int max_val) {
-  for (int i = 0; i < 3; i++) set_hsb_color(0, int(new_msg[0]), min_val, max_val);
-//  hsb_vals[0] = map(int(new_msg[0]), min_val, max_val, 0, 255);
-//  hsb_vals[1] = map(int(new_msg[1]), min_val, max_val, 0, 255);
-//  hsb_vals[2] = map(int(new_msg[2]), min_val, max_val, 0, 255);
-  convertHSB();
 }
 
 void serial_print(char* string_print) {

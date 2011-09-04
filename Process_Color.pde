@@ -19,7 +19,6 @@ void set_hsb_color(int active_control, int new_val, int min_val, int max_val) {
     else hsb_vals[active_control] = map(new_val, min_val, max_val, 0, 100);    
     if (new_val < 3) hsb_vals[active_control] = 0;
     convertHSB();
-//    save_colors();
     last_color_change = millis();
     color_saved = false;
     
