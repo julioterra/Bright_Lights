@@ -27,22 +27,22 @@
 // CONSTANTS: hold the numbers for each of the four main modes
 #define MODE_off            0
 #define MODE_color          1
-#define MODE_fun            2
-#define MODE_realtime       3
-
-// CONSTANTS: hold the number for each of the two fun modes
-#define FUN_strobe          0     
-#define FUN_scroll          1   
+#define MODE_strobe         2
+#define MODE_scroll         3
+#define MODE_realtime       4
 
 // CONSTANTS: hold the number for each of the color modes
 #define RGB                 0     
 #define HSB                 1   
 
 // CONSTANTS: pot output range values, and led output max value
-#define POT_output_max      255
-#define POT_output_min      0
-#define POT_output_range    POT_output_max - POT_output_min
-#define LED_max_level       4000
+#define POT_output_max        255
+#define POT_output_min        0
+#define POT_output_range      POT_output_max - POT_output_min
+#define LED_max_level         4000
+#define REMOTE_output_max     1000
+#define REMOTE_output_min     0
+#define REMOTE_output_range   REMOTE_output_max - REMOTE_output_min
 
 // CONSTANTS: scroll and strobe min and max range values
 #define SCROLL_inter_min    5
@@ -64,10 +64,7 @@ int const EEPROM_strobe_address[NUM_strobe_ctrls] = {15};    // assigns address 
 
 // CONSTANTS: arrays that hold the pin numbers of each led on the TLC5940 LED drivers
 //            on the rgb_pins array the r, g, b pin for each led are grouped together 
-int const redPins[NUM_RGB_LED] = {26, 29, 0, 3, 6, 9, 12, 15};
-int const greenPins[NUM_RGB_LED] = {25, 28, 31, 2, 5, 8, 11, 14};
-int const bluePins[NUM_RGB_LED] = {24, 27, 30, 1, 4, 7, 10, 13};
-int const rgb_pins[NUM_RGB_LED*NUM_color_ctrls] = {26,25,24, 29,28,27, 0,31,30, 3,2,1, 6,5,4, 9,8,7, 12,11,10, 15,14,13};
+int const rgb_pins[NUM_RGB_LED*3] = {26,25,24, 29,28,27, 0,31,30, 3,2,1, 6,5,4, 9,8,7, 12,11,10, 15,14,13};
 
 // VARIABLES: overall mode variables
     int active_mode = MODE_off;        // holds the current mode state
@@ -83,13 +80,13 @@ int const rgb_pins[NUM_RGB_LED*NUM_color_ctrls] = {26,25,24, 29,28,27, 0,31,30, 
 
     long last_color_change = 0;         // holds last time color was changed
     boolean color_saved = false;       // holds if current color has been saved
-    int save_interval = 1000;
+    int save_interval = 1500;
 
 
 // VARIABLES: fun mode control state variable; strobe and scroll variables 
     int fun_mode_active = 0;          // holds the current fun mode (strobe or scroll)
   
-    long last_fun_mode_change = 0;         // holds last time color was changed
+    long last_mode_change = 0;         // holds last time color was changed
     boolean fun_mode_saved = false;       // holds if current color has been saved
   
     // strobe control variables
@@ -111,7 +108,7 @@ Switch switches[NUM_switches] = {Switch(ID_strobe_switch, A0), Switch(ID_color_s
 AnalogSwitch pot = AnalogSwitch(ID_potentiometer, A2);
 
 // OBJECTS: create a soft serial port object for bluetooth connection
-NewSoftSerial blueSerial = NewSoftSerial(2, 4);
+NewSoftSerial blueSerial = NewSoftSerial(2,4);
 
 
 /********************* 
@@ -123,7 +120,7 @@ void setup() {
   // initiliaze both serial ports
   Serial.begin(57600);
   blueSerial.begin(57600);
-  serial_print("connection started");
+  serial_write(255);
   
   // initialized the LED driver (TLC5940)
   Tlc.init();

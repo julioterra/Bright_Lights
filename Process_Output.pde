@@ -5,12 +5,10 @@
     or calls the fun_mode_on method to handle the fun mode. 
   */
 void control_lights() {
-    if (active_mode == MODE_color) lights_on_all();
-    else if (active_mode == MODE_off) lights_off_all(); 
-    else if (active_mode == MODE_fun) {
-        if (fun_mode_active == FUN_strobe) strobe_active(); 
-        else if (fun_mode_active == FUN_scroll) scroll_active(); 
-    }
+    if (active_mode == MODE_off) lights_off_all(); 
+    else if (active_mode == MODE_color) lights_on_all();
+    else if (active_mode == MODE_strobe) strobe_active(); 
+    else if (active_mode == MODE_scroll) scroll_active(); 
 }
 
 
@@ -37,9 +35,10 @@ void lights_on_realtime(byte* new_data) {
 void lights_on_all() {
     Tlc.clear();      
     for (int i = 0; i < NUM_RGB_LED; i++) {  
-        Tlc.set(redPins[i], rgb_vals[R]);
-        Tlc.set(greenPins[i], rgb_vals[G]);
-        Tlc.set(bluePins[i], rgb_vals[B]);
+        int led_offset = i * 3;
+        Tlc.set(rgb_pins[led_offset+0], rgb_vals[R]);
+        Tlc.set(rgb_pins[led_offset+1], rgb_vals[G]);
+        Tlc.set(rgb_pins[led_offset+2], rgb_vals[B]);
     }
     Tlc.update();  
 }
@@ -54,9 +53,10 @@ void lights_on_single_only(int current_led) {
     Tlc.clear();  
     for (int i = 0; i < NUM_RGB_LED; i++) {
         if (current_led == i) {
-            Tlc.set(redPins[i], rgb_vals[R]);
-            Tlc.set(greenPins[i], rgb_vals[G]);
-            Tlc.set(bluePins[i], rgb_vals[B]);
+            int led_offset = i * 3;
+            Tlc.set(rgb_pins[led_offset+0], rgb_vals[R]);
+            Tlc.set(rgb_pins[led_offset+1], rgb_vals[G]);
+            Tlc.set(rgb_pins[led_offset+2], rgb_vals[B]);
         }
     }      
     Tlc.update();  
@@ -71,9 +71,10 @@ void lights_on_multiple(int* led_array, int array_length) {
     
     Tlc.clear();  
     for (int j = 0; j < array_length; j++) {
-        Tlc.set(redPins[led_array[j]], rgb_vals[R]);
-        Tlc.set(greenPins[led_array[j]], rgb_vals[G]);
-        Tlc.set(bluePins[led_array[j]], rgb_vals[B]);
+        int led_offset = led_array[j] * 3;
+        Tlc.set(rgb_pins[led_offset+0], rgb_vals[R]);
+        Tlc.set(rgb_pins[led_offset+1], rgb_vals[G]);
+        Tlc.set(rgb_pins[led_offset+2], rgb_vals[B]);              
     }      
     Tlc.update();  
 }
@@ -85,9 +86,10 @@ void lights_on_multiple(int* led_array, int array_length) {
     leaving all other lights unchanged.
   */
 void lights_on_single(int current_led) {
-    Tlc.set(redPins[current_led], rgb_vals[R]);
-    Tlc.set(greenPins[current_led], rgb_vals[G]);
-    Tlc.set(bluePins[current_led], rgb_vals[B]);
+    int led_offset = current_led * 3;
+    Tlc.set(rgb_pins[led_offset+0], rgb_vals[R]);
+    Tlc.set(rgb_pins[led_offset+1], rgb_vals[G]);
+    Tlc.set(rgb_pins[led_offset+2], rgb_vals[B]);
     Tlc.update();  
 }
 
@@ -107,9 +109,10 @@ void lights_off_all() {
     Turns off a single lights only.
   */
 void lights_off_single(int current_led) {
-    Tlc.set(redPins[current_led], 0);
-    Tlc.set(greenPins[current_led], 0);
-    Tlc.set(bluePins[current_led], 0);
+    int led_offset = current_led * 3;
+    Tlc.set(rgb_pins[led_offset+0], 0);
+    Tlc.set(rgb_pins[led_offset+1], 0);
+    Tlc.set(rgb_pins[led_offset+2], 0);
     Tlc.update();  
 }
 
