@@ -12,8 +12,7 @@ void  handle_physical_input() {
             new_mode = true;
             int cur_state = switches[i].get_state();
             if (i == ID_strobe_switch && cur_state == HIGH) {
-                active_mode = MODE_fun;
-                select_fun_mode_for_physical_ctrl();
+                active_mode = select_fun_mode_for_physical_ctrl();
             } else if (i == ID_color_switch && cur_state == HIGH) {
                 active_mode = MODE_color;
                 select_color_param_for_physical_ctrl();
@@ -25,16 +24,9 @@ void  handle_physical_input() {
   
     // check pot state and route value to appropriate function
     if (pot.available()) {
-        if (active_mode == MODE_fun) {
-            if (fun_mode_active == FUN_strobe) { soft_set_strobe_speed(pot.get_state(), POT_output_min, POT_output_max); }
-            else if (fun_mode_active == FUN_scroll) { soft_set_scroll_speed(pot.get_state(), POT_output_min, POT_output_max);}
-
-        }
-        else if (active_mode == MODE_color) {
-            if (color_mode == HSB) { soft_set_hsb_color(active_hsb, pot.get_state(), POT_output_min, POT_output_max); }
-            else if (color_mode == RGB) { soft_set_rgb_color(active_hsb, pot.get_state(), POT_output_min, POT_output_max); }
-
-        }
+        if (active_mode == MODE_strobe) { soft_set_strobe_speed(pot.get_state(), POT_output_min, POT_output_max); }
+        else if (active_mode == MODE_scroll) { soft_set_scroll_speed(pot.get_state(), POT_output_min, POT_output_max);}
+        else if (active_mode == MODE_color) { soft_set_hsb_color(active_hsb, pot.get_state(), POT_output_min, POT_output_max); }
     }
 }
 
@@ -46,17 +38,9 @@ void  handle_physical_input() {
      between controls for different RGB, or HSB values. 
    */
 void select_color_param_for_physical_ctrl() {
-    if (color_mode == RGB) {
-        active_rgb++;
-        if (active_rgb >= NUM_color_ctrls) active_rgb = 0;
-        blink_delay(active_rgb+1);
-    }
-    
-    else if (color_mode == HSB) {
         active_hsb++;
         if (active_hsb >= NUM_color_ctrls) active_hsb = 0;  
         blink_delay(active_hsb+1);
-    }
 }
 
 
@@ -65,9 +49,10 @@ void select_color_param_for_physical_ctrl() {
      This method is called whenever the switch is toggled to the fun mode select side.
      When method is called it toggles between the strobe and scroll mode.
    */
-void select_fun_mode_for_physical_ctrl() {
-    fun_mode_active++;
-    if (fun_mode_active >= NUM_fun_modes) fun_mode_active = 0;
+int select_fun_mode_for_physical_ctrl() {
+    if (fun_mode_active == MODE_strobe) fun_mode_active = MODE_scroll;
+    else fun_mode_active = MODE_strobe;
+    return fun_mode_active;
 }
 
 
@@ -82,11 +67,11 @@ boolean check_soft_takeover(int old_val, int new_val) {
 
    if (new_mode) {
         soft_takeover_complete = false;
-//        new_mode = false;
+        new_mode = false;
         if (new_val > old_val) takeover_direction = 1;
         else if (new_val < old_val) takeover_direction = -1;
         else soft_takeover_complete = true;
-//        return false;    
+        return false;    
     }
     
     if (!soft_takeover_complete) {

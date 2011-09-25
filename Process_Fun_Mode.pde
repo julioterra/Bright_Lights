@@ -3,9 +3,8 @@
   Called by physical controls when initially switched to the strobe control mode.
   */
 void soft_set_strobe_speed (int new_val, int min_val, int max_val) {
-    if (!new_mode || check_soft_takeover(strobe_speed, new_val)) {   
-        set_strobe_speed ( new_val, min_val, max_val);
-        new_mode = false;
+    if (check_soft_takeover(strobe_speed, new_val)) {   
+        set_strobe_speed (new_val, min_val, max_val);
     }
 }
 
@@ -22,9 +21,8 @@ void set_strobe_speed (int new_val, int min_val, int max_val) {
   Called by physical controls when initially switched to the scroll control mode.
   */
 void soft_set_scroll_speed (int new_val, int min_val, int max_val) {
-    if (!new_mode || check_soft_takeover(scroll_speed, new_val)) {   
+    if (check_soft_takeover(scroll_speed, new_val)) {   
         set_scroll_speed (new_val, min_val, max_val);
-        new_mode = false;        
     }
 }
 
@@ -107,6 +105,7 @@ void scroll_active() {
         scroll_last_switch = current_time;
     }    
 
+    // if it is time to move the scroll then move it
     if (new_state) {
         if (scroll_direction == 0 || scroll_direction == 1) {
             int active_leds[scroll_width];
