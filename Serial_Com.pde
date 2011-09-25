@@ -144,8 +144,7 @@ void send_status_message() {
     // initialize byte array that will hold converted integers  
     byte converted_int[] = {0,0,0};    
 
-    load_colors();
-    load_fun_mode(); 
+    load_data();
     
     // send HEADER BYTE
     serial_write(STATUS_MSG_request);  

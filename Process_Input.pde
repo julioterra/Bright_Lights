@@ -26,7 +26,7 @@ void  handle_physical_input() {
     if (pot.available()) {
         if (active_mode == MODE_strobe) { soft_set_strobe_speed(pot.get_state(), POT_output_min, POT_output_max); }
         else if (active_mode == MODE_scroll) { soft_set_scroll_speed(pot.get_state(), POT_output_min, POT_output_max);}
-        else if (active_mode == MODE_color) { soft_set_hsb_color(active_hsb, pot.get_state(), POT_output_min, POT_output_max); }
+        else if (active_mode == MODE_color) { soft_set_hsb_color(p_control_hsb, pot.get_state(), POT_output_min, POT_output_max); }
     }
 }
 
@@ -38,9 +38,9 @@ void  handle_physical_input() {
      between controls for different RGB, or HSB values. 
    */
 void select_color_param_for_physical_ctrl() {
-        active_hsb++;
-        if (active_hsb >= NUM_color_ctrls) active_hsb = 0;  
-        blink_delay(active_hsb+1);
+        p_control_hsb++;
+        if (p_control_hsb >= NUM_color_ctrls) p_control_hsb = 0;  
+        blink_delay(p_control_hsb+1);
 }
 
 
@@ -50,9 +50,9 @@ void select_color_param_for_physical_ctrl() {
      When method is called it toggles between the strobe and scroll mode.
    */
 int select_fun_mode_for_physical_ctrl() {
-    if (fun_mode_active == MODE_strobe) fun_mode_active = MODE_scroll;
-    else fun_mode_active = MODE_strobe;
-    return fun_mode_active;
+    if (p_control_strobe_scroll == MODE_strobe) p_control_strobe_scroll = MODE_scroll;
+    else p_control_strobe_scroll = MODE_strobe;
+    return p_control_strobe_scroll;
 }
 
 

@@ -13,7 +13,7 @@ void soft_set_strobe_speed (int new_val, int min_val, int max_val) {
   */
 void set_strobe_speed (int new_val, int min_val, int max_val) {
     strobe_speed = map(new_val, min_val, max_val, STROBE_inter_min, STROBE_inter_max);
-    fun_mode_saved = false;  
+    data_saved = false; 
 }
 
 /********************* 
@@ -31,7 +31,7 @@ void soft_set_scroll_speed (int new_val, int min_val, int max_val) {
   */
 void set_scroll_speed (int new_val, int min_val, int max_val) {
     scroll_speed = map(new_val, min_val, max_val, SCROLL_inter_min, SCROLL_inter_max);  
-    fun_mode_saved = false;  
+    data_saved = false;  
 }
 
 /********************* 
@@ -40,7 +40,7 @@ void set_scroll_speed (int new_val, int min_val, int max_val) {
   */
 void set_scroll_direction (int new_val, int min_val, int max_val) {
     scroll_direction = map(new_val, min_val, max_val, 0, 4);  
-    fun_mode_saved = false;  
+    data_saved = false;  
 }
 
 /********************* 
@@ -49,7 +49,7 @@ void set_scroll_direction (int new_val, int min_val, int max_val) {
   */
 void set_scroll_width (int new_val, int min_val, int max_val) {
     scroll_width = map(new_val, min_val, max_val, 1, (NUM_RGB_LED-1));  
-    fun_mode_saved = false;  
+    data_saved = false;  
 }
 
 /********************* 

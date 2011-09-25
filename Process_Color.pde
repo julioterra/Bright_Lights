@@ -26,21 +26,8 @@ void set_hsb_color(int active_control, int new_val, int min_val, int max_val) {
 void set_hsb_color(int active_control, int new_val) {
     hsb_vals[active_control] = new_val;
     convertHSB();
-    color_saved = false;    
+    data_saved = false;    
 }
-
-//void soft_set_rgb_color(int active_control, int new_val, int min_val, int max_val) {
-//    if (check_soft_takeover(rgb_vals[active_control], new_val)) {   
-//        set_rgb_color(active_control, new_val, min_val, max_val);
-//    } 
-//}
-//
-//void set_rgb_color(int active_control, int new_val, int min_val, int max_val) {
-//    rgb_vals[active_control] = map(new_val, min_val, max_val, 0, LED_max_level);   
-//    if (new_val < 3) rgb_vals[active_control] = 0;
-//}
-
-
 
 /********************* 
   CONVERT HSB
