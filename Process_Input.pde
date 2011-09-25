@@ -5,10 +5,11 @@
      is routed to the appropriate functions that control the current mode
      and state of the color, or fun mode.
   */
-void  handle_physical_input() {
+void  Bright_Lights::handle_physical_input() {
     // check current mode based on switch state
     for(int i = 0; i < NUM_switches; i ++) {
         if (switches[i].available()) {
+          if (i <= 1) {
             new_mode = true;
             int cur_state = switches[i].get_state();
             if (i == ID_strobe_switch && cur_state == HIGH) {
@@ -16,18 +17,22 @@ void  handle_physical_input() {
             } else if (i == ID_color_switch && cur_state == HIGH) {
                 active_mode = MODE_color;
                 select_color_param_for_physical_ctrl();
-            } else if (switches[i].get_state() == LOW) {
-                active_mode = MODE_off;
+            } else if ((i == ID_color_switch && cur_state == LOW) || (i == ID_strobe_switch && cur_state == LOW) ) {
+//                active_mode = MODE_off;
+                  serial_write(155);
+
             }   
+          }
         }
     }
-  
     // check pot state and route value to appropriate function
     if (pot.available()) {
         if (active_mode == MODE_strobe) { soft_set_strobe_speed(pot.get_state(), POT_output_min, POT_output_max); }
         else if (active_mode == MODE_scroll) { soft_set_scroll_speed(pot.get_state(), POT_output_min, POT_output_max);}
         else if (active_mode == MODE_color) { soft_set_hsb_color(p_control_hsb, pot.get_state(), POT_output_min, POT_output_max); }
     }
+
+    // save data if changes have been made to color and light mode
 }
 
 
@@ -37,7 +42,7 @@ void  handle_physical_input() {
      The state of the color_control variable determines whether we are alternating
      between controls for different RGB, or HSB values. 
    */
-void select_color_param_for_physical_ctrl() {
+void Bright_Lights::select_color_param_for_physical_ctrl() {
         p_control_hsb++;
         if (p_control_hsb >= NUM_color_ctrls) p_control_hsb = 0;  
         blink_delay(p_control_hsb+1);
@@ -49,7 +54,7 @@ void select_color_param_for_physical_ctrl() {
      This method is called whenever the switch is toggled to the fun mode select side.
      When method is called it toggles between the strobe and scroll mode.
    */
-int select_fun_mode_for_physical_ctrl() {
+int Bright_Lights::select_fun_mode_for_physical_ctrl() {
     if (p_control_strobe_scroll == MODE_strobe) p_control_strobe_scroll = MODE_scroll;
     else p_control_strobe_scroll = MODE_strobe;
     return p_control_strobe_scroll;
@@ -60,10 +65,7 @@ int select_fun_mode_for_physical_ctrl() {
   CHECK SOFT TAKEOVER
     Enables soft takeover behavior when switching the parameter that the potentiometer is controlling. 
   */
-bool soft_takeover_complete = false;
-int takeover_direction = 0;
-
-boolean check_soft_takeover(int old_val, int new_val) {
+bool Bright_Lights::check_soft_takeover(int old_val, int new_val) {
 
    if (new_mode) {
         soft_takeover_complete = false;

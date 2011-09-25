@@ -9,12 +9,6 @@
 #ifndef config_h
 #define BL_config_h
 
-#include "WProgram.h"
-
-/** \file
- Configuration for AMUP sketches. This file holds constants that define variables that are used across multiple.  
- */
-
 // switch states
 #define OFF     0    // equivalent to LOW
 #define ON      1    // equivalent to HIGH
