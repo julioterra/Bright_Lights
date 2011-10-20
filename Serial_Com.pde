@@ -1,9 +1,11 @@
+boolean ready_to_read = false;
 
 // CONSIDER USING END BYTE TO SIMPLIFY THIS METHOD. 
 // then I can just read until the end byte is received, and then send the message to the parse
 // message method to sort out what actions to take in response.
 void Bright_Lights::handle_serial() {
 
+  if (ready_to_read) {
     if (Serial.available()  || blueSerial.available()){
         while(Serial.available() || blueSerial.available()) {    
             byte new_byte;     
@@ -15,7 +17,7 @@ void Bright_Lights::handle_serial() {
                 send_status_message();
             }
 
-            // NEW MESSAGE START: if this byte is equal to or greater then 129 then we know that this is the start of a new message
+            // LEDs OFF: 
             else if (int(new_byte) == MODE_MSG_off) {
                 active_mode = MODE_off;
             }
@@ -31,7 +33,7 @@ void Bright_Lights::handle_serial() {
             // MESSAGE END: if this byte is equal to 128 then we know that this is end of a message
             else if (reading_msg_flag) {
                 if (int(new_byte) == END_MSG) {
-                    parse_serial_msg(msg_type, serial_msg);
+                    parse_serial_msg(msg_type, serial_msg, byte_count);
                     byte_count = 0;
                     reading_msg_flag = false;
                 }
@@ -52,74 +54,71 @@ void Bright_Lights::handle_serial() {
             }
         } 
     }
+  }
 }
 
-void Bright_Lights::parse_serial_msg(byte msg_header, byte* msg_body) {
-
+void Bright_Lights::parse_serial_msg(byte msg_header, byte* msg_body, int msg_counter) {
+    ready_to_read = false;
     switch(msg_header) {
         case MODE_MSG_realtime:
-            active_mode = MODE_realtime;
-            lights_on_realtime(msg_body);
+            if (msg_counter == MSG_LEN_realtime) {
+                active_mode = MODE_realtime;
+                lights_on_realtime(msg_body);
+            }
             break;
 
         case SET_MSG_hsb:
             // go through the message and convert the bites to integers
-            for (int i = 0; i < 3; i++){ 
-                byte temp_byte_array[] = {0,0,0};
-                int index_offset = i * 3;
-                for (int j = 0; j < 3; j++){ temp_byte_array[j] = msg_body[index_offset + j]; } 
-                set_hsb_color(i, bytes2int_127(temp_byte_array), 0, 1000); 
+            if (msg_counter == MSG_LEN_color) {
+                for (int i = 0; i < 3; i++){ 
+                    byte temp_byte_array[] = {0,0,0};
+                    int index_offset = i * 3;
+                    for (int j = 0; j < 3; j++){ temp_byte_array[j] = msg_body[index_offset + j]; } 
+                    set_hsb_color(i, bytes2int_127(temp_byte_array), 0, 1000); 
+                }
             }
             break;
 
         case MODE_MSG_color_hsb:
-            serial_write(msg_header);
-             serial_write(active_mode);
-            // set the active_mode to color mode
-            if (active_mode != MODE_color) {
-                new_mode = true;
-            }
-            active_mode = MODE_color;
-             serial_write(active_mode);
-            // go through the message and convert the bites to integers
-            for (int i = 0; i < 3; i++){ 
-                byte temp_byte_array[] = {0,0,0};
-                int index_offset = i * 3;
-                for (int j = 0; j < 3; j++){ temp_byte_array[j] = msg_body[index_offset + j]; } 
-                set_hsb_color(i, bytes2int_127(temp_byte_array), 0, 1000); 
-            }
-            serial_write(active_mode);
-
+            if (msg_counter == MSG_LEN_color) {
+                active_mode = MODE_color;
+                // go through the message and convert the bites to integers
+                for (int i = 0; i < 3; i++){ 
+                    byte temp_byte_array[] = {0,0,0};
+                    int index_offset = i * 3;
+                    for (int j = 0; j < 3; j++){ temp_byte_array[j] = msg_body[index_offset + j]; } 
+                    set_hsb_color(i, bytes2int_127(temp_byte_array), 0, 1000); 
+                }
+            }  
             break;
 
         case MODE_MSG_scroll:
-            if (active_mode != MODE_scroll) {
-                new_mode = true;
+            if (msg_counter == MSG_LEN_scroll) {
+                active_mode = MODE_scroll;
+                set_scroll_speed(int(msg_body[0]), 0, 127);
+                set_scroll_direction(int(msg_body[1]), 0, 3);
+                set_scroll_width(int(msg_body[2]), 0, 127);
             }
-            active_mode = MODE_scroll;
-            set_scroll_speed(int(msg_body[0]), 0, 127);
-            set_scroll_direction(int(msg_body[1]), 0, 3);
-            set_scroll_width(int(msg_body[2]), 0, 127);
             break;
 
         case MODE_MSG_strobe:
-            if (active_mode != MODE_strobe) {
-                new_mode = true;
+            if (msg_counter == MSG_LEN_strobe) {
+                active_mode = MODE_strobe;
+                set_strobe_speed(int(msg_body[0]), 0, 127);
             }
-            active_mode = MODE_strobe;
-            set_strobe_speed(int(msg_body[0]), 0, 127);
             break;
         default:
             break;    
     }  
-    serial_write(active_mode);
-
+    
+    serial_flush_to_read();
 }
 
-//void serial_println(char* string_print) {
-//    blueSerial.println(string_print);
-//    Serial.println(string_print);
-//}
+void Bright_Lights::serial_flush_to_read() {
+  blueSerial.flush();
+  Serial.flush();
+  ready_to_read = true;
+}
 
 void Bright_Lights::serial_write(byte send_byte) {
     blueSerial.print(send_byte, BYTE);

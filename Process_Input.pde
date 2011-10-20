@@ -19,19 +19,18 @@ void  Bright_Lights::handle_physical_input() {
                 select_color_param_for_physical_ctrl();
             } else if ((i == ID_color_switch && cur_state == LOW) || (i == ID_strobe_switch && cur_state == LOW) ) {
 //                active_mode = MODE_off;
-                  serial_write(155);
-
             }   
           }
         }
     }
     // check pot state and route value to appropriate function
-    if (pot.available()) {
-        if (active_mode == MODE_strobe) { soft_set_strobe_speed(pot.get_state(), POT_output_min, POT_output_max); }
-        else if (active_mode == MODE_scroll) { soft_set_scroll_speed(pot.get_state(), POT_output_min, POT_output_max);}
-        else if (active_mode == MODE_color) { soft_set_hsb_color(p_control_hsb, pot.get_state(), POT_output_min, POT_output_max); }
+    for(int i = 0; i < NUM_pots; i ++) {
+        if (pots[i].available()) {
+            if (active_mode == MODE_strobe) { soft_set_strobe_speed(pots[i].get_state(), POT_output_min, POT_output_max); }
+            else if (active_mode == MODE_scroll) { soft_set_scroll_speed(pots[i].get_state(), POT_output_min, POT_output_max);}
+            else if (active_mode == MODE_color) { soft_set_hsb_color(p_control_hsb, pots[i].get_state(), POT_output_min, POT_output_max); }
+        }
     }
-
     // save data if changes have been made to color and light mode
 }
 

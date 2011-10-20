@@ -26,7 +26,8 @@ void Bright_Lights::set_hsb_color(int active_control, int new_val, int min_val, 
 void Bright_Lights::set_hsb_color(int active_control, int new_val) {
     hsb_vals[active_control] = new_val;
     convertHSB();
-    data_saved = false;    
+    data_saved = false;   
+    last_update = millis(); 
 }
 
 /********************* 

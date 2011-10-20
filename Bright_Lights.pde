@@ -14,6 +14,7 @@
 // CONSTANTS: vary that based on form-factor of led box
 // count and number of switches, number of rbg leds
 #define NUM_switches        2
+#define NUM_pots            1
 #define NUM_RGB_LED         8
 #define ID_strobe_switch    0 
 #define ID_color_switch     1
@@ -23,6 +24,7 @@
 #define NUM_color_ctrls     3
 #define NUM_scroll_ctrls    3
 #define NUM_strobe_ctrls    1
+#define NUM_EEPROM_ctrls    NUM_color_ctrls + NUM_scroll_ctrls + NUM_strobe_ctrls
 
 // CONSTANTS: hold the MODE numbers
 #define MODE_off            0
@@ -70,24 +72,26 @@
 class Bright_Lights {
 
   private:
-    int* rgb_pins;
-    int* EEPROM_addresses;
-    Switch* switches;
-    AnalogSwitch pot;
-    
-//    NewSoftSerial blueSerial;
-    
-    int active_mode;
-    bool new_mode;             
+    int* rgb_pins;                           // array that holds location for the pin number of each led pin on the TLC5940
+    int* EEPROM_addresses;                   // array that holds EEPROM addresses for each 
+    Switch* switches;                        // array of physical switch objects 
+    AnalogSwitch* pots;                      // array of physical potentiometers objects
+
+    NewSoftSerial blueSerial;
+    boolean ready_to_read;
+
     int hsb_vals[NUM_color_ctrls];           // holds the hsb color values
     int rgb_vals[NUM_color_ctrls];           // holds the rgb color values
-    int p_control_hsb;                       // current hsb parameter being controlled by physical control
+
+    int active_mode;                         // current device mode
+    bool new_mode;                           // new mode flag, set to true when mode changes (used for soft-takeover)
 
     boolean data_saved;                      // holds if current data has been saved
-    long last_save;                          // holds last time data was saved
+    long last_update;                        // holds last time data was saved
     int save_interval;                       // interval between time changes being made and saved
     
-    int p_control_strobe_scroll;         // holds the current fun mode (strobe or scroll)
+    int p_control_hsb;                       // current hsb control parameter for physical controls
+    int p_control_strobe_scroll;             // current strobe or scroll control parameter for physical controls
   
     // strobe control variables
     int strobe_speed;
@@ -101,9 +105,8 @@ class Bright_Lights {
     long scroll_last_switch;
     int scroll_led_pos;
 
-    
-    bool soft_takeover_complete;
-    int takeover_direction;
+    bool soft_takeover_complete;            // flag for when soft takeover is complete
+    int takeover_direction;                 // direction of soft takeover 
 
     byte msg_type;
     byte serial_msg[MSG_LEN_realtime];
@@ -140,40 +143,34 @@ class Bright_Lights {
     void lights_off_single(int);
     void blink_delay(int);
     
-    void parse_serial_msg(byte, byte*);
+    void parse_serial_msg(byte, byte*, int);
     void serial_write(byte);
     void send_status_message();
 
     void control_lights();
     void handle_serial();
     void handle_physical_input();
+    void serial_flush_to_read();
     
   public:
-    Bright_Lights(int*, Switch*, int, int);
-    void set_EEPROM(int*);
+    Bright_Lights(int, int);
+    void setup(int*, int*, Switch*, AnalogSwitch*);
     void run();
-
-
 };
 
 
-int EEPROM_addresses[NUM_color_ctrls+NUM_scroll_ctrls+NUM_strobe_ctrls] = {3,5,7,9,11,13,15};   // assigns address for saving rgb color values
-int _rgb_pins[NUM_RGB_LED*3] = {26,25,24, 29,28,27, 0,31,30, 3,2,1, 6,5,4, 9,8,7, 12,11,10, 15,14,13};
+int rgb_pins[NUM_RGB_LED*3] = {26,25,24, 29,28,27, 0,31,30, 3,2,1, 6,5,4, 9,8,7, 12,11,10, 15,14,13};
+int EEPROM_addresses[NUM_EEPROM_ctrls] = {3,5,7,9,11,13,15};   // assigns address for saving rgb color values
 Switch switches[NUM_switches] = {Switch(ID_strobe_switch, A0), Switch(ID_color_switch, A1)};
-NewSoftSerial blueSerial = NewSoftSerial(2,4);
-Bright_Lights bright_lights = Bright_Lights (_rgb_pins, switches, 2, 4);
+AnalogSwitch pots[NUM_pots] = {AnalogSwitch(ID_potentiometer, A2)};
+Bright_Lights bright_lights = Bright_Lights (2, 4);
 
 /********************* 
   SETUP method
-     This method initializes both serial ports, the led drivers (TLC5940), and 
-     the potentiometer object; and it loads the saved color
   */
 void setup() {
     Serial.begin(57600);
-    blueSerial.begin(57600);
-    Tlc.init();
-
-    bright_lights.set_EEPROM(EEPROM_addresses);
+    bright_lights.setup(rgb_pins, EEPROM_addresses, switches, pots);
 }
 
 
@@ -188,49 +185,56 @@ void loop() {
     bright_lights.run();
 }
 
-Bright_Lights::Bright_Lights(int* led_pin_array, Switch* switch_array, int bt_rx, int bt_tx) : pot(ID_potentiometer, A2) {
-//Bright_Lights::Bright_Lights(int* led_pin_array, InputElement* switch_array, int bt_rx, int bt_tx) : blueSerial(bt_rx, bt_tx) {
-   rgb_pins = led_pin_array;
-   switches = switch_array;
+Bright_Lights::Bright_Lights(int bt_rx, int bt_tx) : blueSerial(bt_rx, bt_tx) {
+
+   blueSerial.begin(57600);
 
    active_mode = MODE_off;
    new_mode = false;    
    for (int i = 0; i < NUM_color_ctrls; i++ ) { hsb_vals[i] = 0; } 
    for (int i = 0; i < NUM_color_ctrls; i++ ) { rgb_vals[i] = 0; }
-   p_control_hsb = 2;  
-   data_saved = 0;         
-   last_save = true;
-   save_interval = 1500;
    
+   p_control_hsb = 2;  
    p_control_strobe_scroll = 0;          
+   ready_to_read = true;
+   
+    // scroll and strobe state variables
    strobe_speed = STROBE_speed_max;
    strobe_last_switch = 0;
    strobe_on = false;
-    
-    // scroll control variables
    scroll_speed = SCROLL_speed_max;
    scroll_direction = 0;
    scroll_width = SCROLL_width_min;
    scroll_last_switch = 0;
    scroll_led_pos = 0;
    
+   // soft takeover variables
    soft_takeover_complete = false;
    takeover_direction = 0;
-  
 
-  msg_type = 0;
-  byte_count = 0;
-  reading_msg_flag = false;
+   // message type variabls
+   msg_type = 0;
+   byte_count = 0;
+   reading_msg_flag = false;
 }
 
-void Bright_Lights::set_EEPROM(int* addresses) {
+void Bright_Lights::setup(int* _rgb_pins, int* _EEPROM_addresses, Switch* _switches, AnalogSwitch* _pots) {
+  rgb_pins = _rgb_pins;
 
-  EEPROM_addresses = addresses;
-  // load colors from EEPROM 
+  switches = _switches;
+  pots = _pots;
+
+  // initialize data save variables and load colors from EEPROM 
+  EEPROM_addresses = _EEPROM_addresses;
+  data_saved = true;         
+  last_update = 0;
+  save_interval = 4000;
   load_data();
   
   // send ready to connect byte to controller 
   serial_write(CONNECT_MSG_confirm);  
+
+  Tlc.init();
 
 }
 

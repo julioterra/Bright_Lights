@@ -14,6 +14,7 @@ void Bright_Lights::soft_set_strobe_speed (int new_val, int min_val, int max_val
 void Bright_Lights::set_strobe_speed (int new_val, int min_val, int max_val) {
     strobe_speed = map(new_val, min_val, max_val, STROBE_speed_min, STROBE_speed_max);
     data_saved = false; 
+    last_update = millis();
 }
 
 /********************* 
@@ -32,6 +33,7 @@ void Bright_Lights::soft_set_scroll_speed (int new_val, int min_val, int max_val
 void Bright_Lights::set_scroll_speed (int new_val, int min_val, int max_val) {
     scroll_speed = map(new_val, min_val, max_val, SCROLL_speed_min, SCROLL_speed_max);  
     data_saved = false;  
+    last_update = millis();
 }
 
 /********************* 
@@ -41,6 +43,7 @@ void Bright_Lights::set_scroll_speed (int new_val, int min_val, int max_val) {
 void Bright_Lights::set_scroll_direction (int new_val, int min_val, int max_val) {
     scroll_direction = map(new_val, min_val, max_val, 0, 3);  
     data_saved = false;  
+    last_update = millis();
 }
 
 /********************* 
@@ -50,6 +53,7 @@ void Bright_Lights::set_scroll_direction (int new_val, int min_val, int max_val)
 void Bright_Lights::set_scroll_width (int new_val, int min_val, int max_val) {
     scroll_width = map(new_val, min_val, max_val, SCROLL_width_min, SCROLL_width_max);  
     data_saved = false;  
+    last_update = millis();
 }
 
 /********************* 

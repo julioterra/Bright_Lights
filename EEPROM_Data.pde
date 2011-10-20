@@ -3,7 +3,8 @@
     This methods saves the current color, strobe and scroll preferences to the EEPROM.
   */
 void Bright_Lights::save_data(){
-    if (!data_saved && (millis() - last_save) > save_interval) {  
+    int current_time = millis();
+    if (!data_saved && (current_time - last_update) > save_interval) {  
         byte temp_array[] = {0,0};
 
         int2bytes(hsb_vals[0], temp_array);
@@ -28,7 +29,6 @@ void Bright_Lights::save_data(){
         for (int i; i < 2; i++) { EEPROM.write(EEPROM_addresses[6]+i, temp_array[i]); }
 
         data_saved = true;
-        last_save = millis();
     }
 }
 
